@@ -3,7 +3,7 @@ import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import { BiLogIn } from "react-icons/bi";
 import { Link } from "react-router-dom";
-
+import PasswordInput from "../../components/passwordInput/PasswordInput";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,14 +33,20 @@ const Login = () => {
               value={email}
               onChange={handleInputChange}
             />
-            <input
+            <PasswordInput
+              placeholder="Password"
+              name="password"
+              value={password}
+              onChange={handleInputChange}
+            />
+            {/* <input
               type="password"
               placeholder="Password"
               name="password"
               required
               value={password}
               onChange={handleInputChange}
-            />
+            /> */}
             <button type="submit" className="--btn --btn-primary --btn-block">
               Login
             </button>
