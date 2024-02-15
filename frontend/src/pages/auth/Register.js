@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./auth.module.scss";
 import { FaTimes } from "react-icons/fa";
 import { BsCheck2All } from "react-icons/bs";
@@ -38,6 +38,34 @@ const Register = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  useEffect(() => {
+    //check lower and upper case
+    if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
+      setUCase(true);
+    } else {
+      setUCase(false);
+    }
+    // Check For Numbers
+    if (password.match(/([0-9])/)) {
+      setNum(true);
+    } else {
+      setNum(false);
+    }
+    // Check For Special char
+    if (password.match(/([!,%,&,@,#,$,^,*,?,_,~])/)) {
+      setSChar(true);
+    } else {
+      setSChar(false);
+    }
+    //check for password length
+    if (password.length > 5) {
+      setPassLength(true);
+    } else {
+      setPassLength(false);
+    }
+  }, [password]);
+
   const loginUser = () => {};
 
   return (
