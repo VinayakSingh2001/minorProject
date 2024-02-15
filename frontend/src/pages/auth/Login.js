@@ -8,7 +8,9 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleInputChange = () => {};
+  const handleInputChange = (e) => {
+    
+  };
   const loginUser = () => {};
 
   return (
@@ -39,14 +41,6 @@ const Login = () => {
               value={password}
               onChange={handleInputChange}
             />
-            {/* <input
-              type="password"
-              placeholder="Password"
-              name="password"
-              required
-              value={password}
-              onChange={handleInputChange}
-            /> */}
             <button type="submit" className="--btn --btn-primary --btn-block">
               Login
             </button>
