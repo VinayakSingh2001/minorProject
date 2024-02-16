@@ -4,6 +4,7 @@ import { FaTrashAlt } from "react-icons/fa";
 import PageMenu from "../../components/pageMenu/PageMenu";
 import UserStats from "../../components/userStats/UserStats";
 import Search from "../../components/search/Search";
+import ChangeRole from "../../components/changeRole/ChangeRole";
 
 const UserList = () => {
   return (
@@ -39,7 +40,9 @@ const UserList = () => {
                   <td>Vinayak</td>
                   <td>vinayak@test.com</td>
                   <td>admin</td>
-                  <td>Change Role</td>
+                  <td>
+                    <ChangeRole />
+                  </td>
                   <td>
                     <span>
                       {" "}
