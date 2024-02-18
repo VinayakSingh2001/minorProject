@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { generateToken } = require("../utils");
+const parser = require("ua-parser-js");
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -26,11 +27,23 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Email already in use.");
   }
 
+  //get userAgent
+  //this userAgent fetches information such as -  ua: 'Thunder Client (https://www.thunderclient.com)',
+  // browser: { name: undefined, version: undefined, major: undefined },
+  // engine: { name: undefined, version: undefined },
+  // os: { name: undefined, version: undefined },
+  // device: { vendor: undefined, model: undefined, type: undefined },
+  // cpu: { architecture: undefined }
+  //about the clint
+  const ua = parser(req.headers["user-agent"]);
+  const userAgent = [ua.ua];
+
   //   Create new user
   const user = await User.create({
     name,
     email,
     password,
+    userAgent
   });
 
   // Generate Token
