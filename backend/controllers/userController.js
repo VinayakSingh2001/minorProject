@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const { generateToken } = require("../utils");
 const parser = require("ua-parser-js");
 
+//Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -78,6 +79,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
+//Login User
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -140,7 +142,25 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+//Logout User
+const logoutUser = asyncHandler(async (req, res) => {
+  //as we login the user via sending a cookie to the frontend and that cookie has an expiration date
+  //so if we expire that cookie->then the user is loggedout.
+  //we can also delete the cookie but we prefere expiration on cookie
+  res.cookie("token", "", {
+    path: "/",
+    httpOnly: true,
+    expires: new Date(0), //expired the cookie
+    sameSite: "none",
+    secure: true,
+  });
+  return res.status(200).json({
+    message: "Logout Successfull",
+  });
+});
+
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
 };
