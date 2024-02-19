@@ -159,8 +159,13 @@ const logoutUser = asyncHandler(async (req, res) => {
   });
 });
 
+const getUser = asyncHandler(async (req, res) => {
+  res.send("get User");
+});
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  getUser,
 };
