@@ -7,8 +7,13 @@ const {
   getUser,
   updateUser,
   deleteUser,
+  getUsers,
 } = require("../controllers/userController");
-const { protect, adminOnly } = require("../middleware/authMiddleware");
+const {
+  protect,
+  adminOnly,
+  authorOnly,
+} = require("../middleware/authMiddleware");
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
@@ -17,5 +22,6 @@ router.get("/getuser", protect, getUser);
 router.patch("/updateuser", protect, updateUser);
 
 router.delete("/:id", protect, adminOnly, deleteUser);
+router.get("/getUsers", protect, authorOnly, getUsers);
 
 module.exports = router;
