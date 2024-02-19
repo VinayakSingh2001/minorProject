@@ -160,7 +160,57 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  res.send("get User");
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(200).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+    });
+  } else {
+    res.status(400);
+    throw new Error("User not found!.");
+  }
+});
+
+//update User
+const updateUser = asyncHandler(async (req, res) => {
+  //the data will come from the frontend
+  const user = await User.findById(req.user._id);
+  if (user) {
+    const { name, email, phone, bio, photo, role, isVerified } = user;
+
+    user.email = email;
+
+    user.name = req.body.name || name;
+    user.phone = req.body.phone || phone;
+    user.bio = req.body.bio || bio;
+    user.photo = req.body.photo || photo;
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      bio: updatedUser.bio,
+      photo: updatedUser.phone,
+      role: updatedUser.role,
+      isVerified: updatedUser.isVerified,
+    });
+  } else {
+    res.status(404);
+    throw new Error("user not found.");
+  }
 });
 
 module.exports = {
@@ -168,4 +218,5 @@ module.exports = {
   loginUser,
   logoutUser,
   getUser,
+  updateUser,
 };
