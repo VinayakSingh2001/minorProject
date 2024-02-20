@@ -35,6 +35,8 @@ const sendEmail = async (
     extName: ".handlebars",
   };
 
+  transporter.use("compile", hbs(handlearOptions));
+
   //all the options for sending the email will going to be in the option object
   const options = {
     from: sent_from,
