@@ -2,9 +2,10 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { generateToken } = require("../utils");
+const { generateToken, hashToken } = require("../utils");
 const parser = require("ua-parser-js");
-const { use } = require("../routes/userRoute");
+const crypto = require("crypto");
+const Token = require("../models/tokenModel");
 
 //Register User
 const registerUser = asyncHandler(async (req, res) => {
@@ -140,6 +141,77 @@ const loginUser = asyncHandler(async (req, res) => {
   } else {
     res.status(500);
     throw new Error("Something went wrong,Please try again.");
+  }
+});
+
+//Send Verification Email
+const sendVerificationEmail = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  if (user.isVerified) {
+    res.status(400);
+    throw new Error("User already verified.");
+  }
+
+  //if user is not verified then we create a token and then send that token to the user
+  //but first we check the DB if there is any token or not
+  //if there exists one then we delete that token
+
+  //Delete token if it exists in DB
+  let token = await Token.findOne({ userId: user._id });
+  if (token) {
+    await token.deleteOne();
+  }
+
+  //Create Verrification token and save in DB
+  const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
+
+  //now we have generated a token now we want to save this to the DB
+  //and send an email to user
+  //Hash Token and save
+  const hashedToken = hashToken(verificationToken);
+  await new Token({
+    userId: user._id,
+    vToken: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Data.now() + 60 * (60 * 1000), //60 min
+  }).save();
+
+  //now lets construct a verification url that we will send to the user
+  //we are saving this "hashedToken" in the DB but we will send this "verificationToken" to the user
+
+  //CONSTRUCT A VERIFICTION URL
+  const verificationUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
+  //now we need to send the email
+
+  //SEND EMAIL
+  const subject = "verify your account - AUTH-F";
+  const send_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@test.com";
+  const template = "verifyEmail";
+  const name = user.name;
+  const link = verificationUrl;
+
+  try {
+    await sendEmail(
+      subject,
+      send_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: "Email Sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("Email not sent, please try again");
   }
 });
 
@@ -329,4 +401,5 @@ module.exports = {
   loginStatus,
   upgradeUser,
   sendAutomatedEmail,
+  sendVerificationEmail,
 };
