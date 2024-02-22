@@ -150,12 +150,12 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404);
-    throw new Error("User not found.");
+    throw new Error("User not found");
   }
 
   if (user.isVerified) {
     res.status(400);
-    throw new Error("User already verified.");
+    throw new Error("User already verified");
   }
 
   //if user is not verified then we create a token and then send that token to the user
@@ -167,10 +167,9 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
   if (token) {
     await token.deleteOne();
   }
-
   //Create Verrification token and save in DB
   const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
-
+  console.log(verificationToken);
   //now we have generated a token now we want to save this to the DB
   //and send an email to user
   //Hash Token and save
@@ -179,7 +178,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
     userId: user._id,
     vToken: hashedToken,
     createdAt: Date.now(),
-    expiresAt: Data.now() + 60 * (60 * 1000), //60 min
+    expiresAt: Date.now() + 60 * (60 * 1000), //60 min
   }).save();
 
   //now lets construct a verification url that we will send to the user
@@ -208,11 +207,49 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
       name,
       link
     );
-    res.status(200).json({ message: "Email Sent" });
+    res.status(200).json({ message: "Verification Email Sent" });
   } catch (error) {
     res.status(500);
     throw new Error("Email not sent, please try again");
   }
+});
+
+//Verify User
+const verifyUser = asyncHandler(async (req, res) => {
+  //frontend will gonna send us the token in params
+  //so we destructure that verification token here
+  const { verificationToken } = req.params;
+
+  //as we hashed it before saving in the DB
+  //therefore we have to hash it again before we look it inside the DB
+  const hashedToken = hashToken(verificationToken);
+
+  //now as we have hashed the token, we try to find this token in the DB
+  const userToken = await Token.findOne({
+    vToken: hashedToken,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or expired token");
+  }
+
+  //Find User
+  //as the token that we saved in the DB we gave it the id property
+  const user = await User.findOne({ _id: userToken.userId });
+
+  if (user.isVerified) {
+    res.status(400);
+    throw new Error("User is already verified");
+  }
+
+  //now verify user
+  user.isVerified = true;
+  await user.save();
+
+  //after we saved it we have to send a response.status that user has been verified
+  res.status(400).json({ message: "Account Verification Successfull" });
 });
 
 //Logout User
@@ -402,4 +439,5 @@ module.exports = {
   upgradeUser,
   sendAutomatedEmail,
   sendVerificationEmail,
+  verifyUser,
 };
