@@ -427,6 +427,9 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
   //
 });
 
+//Forgot Password
+const forgotPassword = asyncHandler(async (req, res) => {});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -440,4 +443,5 @@ module.exports = {
   sendAutomatedEmail,
   sendVerificationEmail,
   verifyUser,
+  forgotPassword,
 };
