@@ -5,7 +5,11 @@ const jwt = require("jsonwebtoken");
 const { generateToken, hashToken } = require("../utils");
 const parser = require("ua-parser-js");
 const crypto = require("crypto");
+const Cryptr = require("cryptr");
 const Token = require("../models/tokenModel");
+
+const cryptr = new Cryptr(process.env.CRYPTR_KEY);
+
 
 //Register User
 const registerUser = asyncHandler(async (req, res) => {
@@ -104,7 +108,41 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Invalid email or password.");
   }
+  
   //TRIGGER 2 FACTOR AUTH FOR unknown UserAgents
+  const ua = parser(req.headers["user-agent"]);
+  const thisUserAgent = ua.ua;
+  console.log(thisUserAgent);
+  const allowedAgent = user.userAgent.includes(thisUserAgent);
+
+  if (!allowedAgent) {
+    // Genrate 6 digit code
+    const loginCode = Math.floor(100000 + Math.random() * 900000);
+    console.log(loginCode);
+
+    // Encrypt login code before saving to DB
+    const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
+
+    // Delete Token if it exists in DB
+    let userToken = await Token.findOne({ userId: user._id });
+    if (userToken) {
+      await userToken.deleteOne();
+    }
+
+    // Save Tokrn to DB
+    await new Token({
+      userId: user._id,
+      lToken: encryptedLoginCode,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 60 * (60 * 1000), // 60mins
+    }).save();
+
+    res.status(400);
+    throw new Error("New browser or device detected");
+  }
+
+
+
   //now if user exists and password is correct, the next thing we need to check
   //if that user's device is authorized or not
   //we login the user by sending a token(a jsonwebtoken to the user's client or browser)
@@ -387,11 +425,10 @@ const upgradeUser = asyncHandler(async (req, res) => {
   });
 });
 
-//send automated email
+// Send Automated emails
 const sendAutomatedEmail = asyncHandler(async (req, res) => {
   const { subject, send_to, reply_to, template, url } = req.body;
 
-  //what if these things are not send from the frontend therefore we check for it
   if (!subject || !send_to || !reply_to || !template) {
     res.status(500);
     throw new Error("Missing email parameter");
@@ -424,7 +461,6 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("Email not sent, please try again");
   }
-  //
 });
 
 //Forgot Password
