@@ -6,10 +6,10 @@ const { generateToken, hashToken } = require("../utils");
 const parser = require("ua-parser-js");
 const crypto = require("crypto");
 const Cryptr = require("cryptr");
+const sendEmail = require("../utils/sendEmail");
 const Token = require("../models/tokenModel");
 
 const cryptr = new Cryptr(process.env.CRYPTR_KEY);
-
 
 //Register User
 const registerUser = asyncHandler(async (req, res) => {
@@ -108,7 +108,7 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Invalid email or password.");
   }
-  
+
   //TRIGGER 2 FACTOR AUTH FOR unknown UserAgents
   const ua = parser(req.headers["user-agent"]);
   const thisUserAgent = ua.ua;
@@ -140,8 +140,6 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("New browser or device detected");
   }
-
-
 
   //now if user exists and password is correct, the next thing we need to check
   //if that user's device is authorized or not
@@ -179,6 +177,119 @@ const loginUser = asyncHandler(async (req, res) => {
   } else {
     res.status(500);
     throw new Error("Something went wrong,Please try again.");
+  }
+});
+
+// Send Login Code
+const sendLoginCode = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Find Login Code in DB
+  let userToken = await Token.findOne({
+    userId: user._id,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or Expired token, please login again");
+  }
+
+  const loginCode = userToken.lToken;
+  const decryptedLoginCode = cryptr.decrypt(loginCode);
+
+  // Send Login Code
+  const subject = "Login Access Code - AUTH:Z";
+  const send_to = email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@zino.com";
+  const template = "loginCode";
+  const name = user.name;
+  const link = decryptedLoginCode;
+
+  try {
+    await sendEmail(
+      subject,
+      send_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: `Access code sent to ${email}` });
+  } catch (error) {
+    res.status(500);
+    throw new Error("Email not sent, please try again");
+  }
+});
+
+// Login With Code
+const loginWithCode = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  const { loginCode } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Find user Login Token
+  const userToken = await Token.findOne({
+    userId: user.id,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or Expired Token, please login again");
+  }
+
+  const decryptedLoginCode = cryptr.decrypt(userToken.lToken);
+
+  if (loginCode !== decryptedLoginCode) {
+    res.status(400);
+    throw new Error("Incorrect login code, please try again");
+  } else {
+    // Register userAgent
+    const ua = parser(req.headers["user-agent"]);
+    const thisUserAgent = ua.ua;
+    user.userAgent.push(thisUserAgent);
+    await user.save();
+
+    // Generate Token
+    const token = generateToken(user._id);
+
+    // Send HTTP-only cookie
+    res.cookie("token", token, {
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
+    });
+
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(200).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+      token,
+    });
   }
 });
 
@@ -597,4 +708,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
+  sendLoginCode,
+  loginWithCode,
 };

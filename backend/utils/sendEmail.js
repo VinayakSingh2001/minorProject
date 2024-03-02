@@ -1,4 +1,3 @@
-const { log } = require("console");
 const nodemailer = require("nodemailer");
 const hbs = require("nodemailer-express-handlebars");
 const path = require("path");
@@ -12,7 +11,7 @@ const sendEmail = async (
   name,
   link
 ) => {
-  //create email transporter
+  // Create Email Transporter
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: 587,
@@ -37,7 +36,7 @@ const sendEmail = async (
 
   transporter.use("compile", hbs(handlearOptions));
 
-  //all the options for sending the email will going to be in the option object
+  // Options f0r sending email
   const options = {
     from: sent_from,
     to: send_to,
@@ -50,7 +49,7 @@ const sendEmail = async (
     },
   };
 
-  //Send Email
+  // Send Email
   transporter.sendMail(options, function (err, info) {
     if (err) {
       console.log(err);
