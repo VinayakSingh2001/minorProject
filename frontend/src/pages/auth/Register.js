@@ -9,7 +9,11 @@ import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { toast } from "react-toastify";
 import { validateEmail } from "../../redux/features/auth/authService";
 import { useDispatch, useSelector } from "react-redux";
-import { RESET, register } from "../../redux/features/auth/authSlice";
+import {
+  RESET,
+  register,
+  sendVerificationEmail,
+} from "../../redux/features/auth/authSlice";
 import Loader from "../../components/loader/Loader";
 
 const initialState = {
@@ -97,6 +101,7 @@ const Register = () => {
     const userData = { name, email, password };
     //I wanna dispatch that function to registered user which is comming from Redux authslice
     await dispatch(register(userData));
+    await dispatch(sendVerificationEmail());
   };
 
   useEffect(() => {

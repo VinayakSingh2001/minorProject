@@ -36,11 +36,32 @@ const loginStatus = async () => {
   return response.data;
 };
 
+//Get User Profile
+const getUser = async () => {
+  const response = await axios.get(API_URL + "getUser");
+  return response.data;
+};
+
+//Update Profile
+const updateUser = async (userData) => {
+  const response = await axios.patch(API_URL + "updateUser", userData);
+  return response.data;
+};
+
+//Send Verification Email
+const sendVerificationEmail = async () => {
+  const response = await axios.post(API_URL + "sendVerificationEmail");
+  return response.data.message;
+};
+
 const authService = {
   register,
   login,
   logout,
   loginStatus,
+  getUser,
+  updateUser,
+  sendVerificationEmail,
 };
 
 export default authService;
