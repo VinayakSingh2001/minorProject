@@ -17,7 +17,7 @@ import Notification from "../../components/notification/Notification";
 const cloud_name = process.env.REACT_CLOUD_NAME;
 const upload_preset = process.env.REACT_APP_UPLOAD_PRESET;
 
-const shortenText = (text, n) => {
+export const shortenText = (text, n) => {
   if (text.length > n) {
     const shortenedText = text.substring(0, n).concat("...");
     return shortenedText;

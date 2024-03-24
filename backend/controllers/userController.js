@@ -398,7 +398,7 @@ const verifyUser = asyncHandler(async (req, res) => {
   await user.save();
 
   //after we saved it we have to send a response.status that user has been verified
-  res.status(400).json({ message: "Account Verification Successfull" });
+  res.status(200).json({ message: "Account Verification Successfull" });
 });
 
 //Logout User
@@ -489,14 +489,13 @@ const deleteUser = asyncHandler(async (req, res) => {
   });
 });
 
-//Get Users
+// Get Users
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find().sort("-createdAt").select("-password");
   if (!users) {
     res.status(500);
-    throw new Error("something went wrong.");
+    throw new Error("Something went wrong");
   }
-
   res.status(200).json(users);
 });
 
@@ -588,7 +587,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   if (token) {
     await token.deleteOne();
   }
-  //Create rest token and save in DB
+  //Create reset token and save in DB
   const resetToken = crypto.randomBytes(32).toString("hex") + user._id;
   console.log(resetToken);
 

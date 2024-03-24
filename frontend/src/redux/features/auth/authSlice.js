@@ -114,7 +114,7 @@ export const updateUser = createAsyncThunk(
     }
   }
 );
-
+//send verification email
 export const sendVerificationEmail = createAsyncThunk(
   "auth/sendVerificationEmail",
   async (_, thunkAPI) => {
@@ -126,6 +126,119 @@ export const sendVerificationEmail = createAsyncThunk(
           error.response.data &&
           error.response.data.message) ||
         error.message ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//verify User
+export const verifyUser = createAsyncThunk(
+  "auth/verifyUser",
+  async (verificationToken, thunkAPI) => {
+    try {
+      return await authService.verifyUser(verificationToken);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//change Password
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (userData, thunkAPI) => {
+    try {
+      return await authService.changePassword(userData);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//forgot Password
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async (userData, thunkAPI) => {
+    try {
+      return await authService.forgotPassword(userData);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//reset Password
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async ({ userData, resetToken }, thunkAPI) => {
+    try {
+      return await authService.resetPassword(userData, resetToken);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//get Users
+export const getUsers = createAsyncThunk(
+  "auth/getUsers",
+  async (_, thunkAPI) => {
+    try {
+      return await authService.getUsers();
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// deleteUser
+export const deleteUser = createAsyncThunk(
+  "auth/deleteUser",
+  async (id, thunkAPI) => {
+    try {
+      return await authService.deleteUser(id);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
         error.message ||
         error.toString();
       return thunkAPI.rejectWithValue(message);
@@ -260,6 +373,100 @@ const authSlice = createSlice({
         toast.success("Message Sent");
       })
       .addCase(sendVerificationEmail.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      //verify User
+      .addCase(verifyUser.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.success = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(verifyUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      //change Password
+      .addCase(changePassword.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(changePassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.success = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      //forgot Password
+      .addCase(forgotPassword.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.success = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      //reset Password
+      .addCase(resetPassword.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(resetPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.success = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      }) // getUsers
+      .addCase(getUsers.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.users = action.payload;
+      })
+      .addCase(getUsers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      // deleteUser
+      .addCase(deleteUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
