@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./UserList.scss";
 import { FaTrashAlt } from "react-icons/fa";
 import PageMenu from "../../components/pageMenu/PageMenu";
@@ -7,19 +7,30 @@ import Search from "../../components/search/Search";
 import ChangeRole from "../../components/changeRole/ChangeRole";
 import useRedirectLoggedOutUser from "../../customHook/useRedirectLoggedOutUser";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteUser, getUsers } from "../../redux/features/auth/authSlice";
+import {
+  deleteUser,
+  getUsers,
+  selectUser,
+} from "../../redux/features/auth/authSlice";
 import { shortenText } from "../profile/Profile";
 import { Spinner } from "../../components/loader/Loader";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
+import {
+  FILTER_USERS,
+  selectUsers,
+} from "../../redux/features/auth/filterSlice";
 
 const UserList = () => {
   useRedirectLoggedOutUser("/login");
   const dispatch = useDispatch();
 
+  const [search, setSearch] = useState("");
+
   const { users, isLoading, isLoggedIn, isSuccess, message } = useSelector(
     (state) => state.auth
   );
+  const filteredUsers = useSelector(selectUsers);
 
   useEffect(() => {
     dispatch(getUsers());
@@ -32,8 +43,8 @@ const UserList = () => {
 
   const confirmDelete = (id) => {
     confirmAlert({
-      title: "Delete this User",
-      message: "Are you sure you want to delete this User?",
+      title: "Delete This User",
+      message: "Are you sure to do delete this user?",
       buttons: [
         {
           label: "Delete",
@@ -41,10 +52,15 @@ const UserList = () => {
         },
         {
           label: "Cancel",
+          onClick: () => alert("Click No"),
         },
       ],
     });
   };
+
+  useEffect(() => {
+    dispatch(FILTER_USERS({ users, search }));
+  }, [dispatch, users, search]);
 
   return (
     <section>
@@ -59,7 +75,10 @@ const UserList = () => {
                 <h3>All Users</h3>
               </span>
               <span>
-                <Search />
+                <Search
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </span>
             </div>
             {/* Table */}
@@ -78,7 +97,7 @@ const UserList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user, index) => {
+                  {filteredUsers.map((user, index) => {
                     const { _id, name, email, role } = user;
                     return (
                       <tr key={_id}>
@@ -87,7 +106,7 @@ const UserList = () => {
                         <td>{email}</td>
                         <td>{role}</td>
                         <td>
-                          <ChangeRole />
+                          <ChangeRole _id={_id} email={email} />
                         </td>
                         <td>
                           <span>
