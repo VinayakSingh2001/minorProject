@@ -11,6 +11,8 @@ const initialState = {
   isSuccess: false,
   isLoading: false,
   message: "",
+  verifiedUsers: 0,
+  suspendedUsers: 0,
 };
 
 //register user (http request)
@@ -264,6 +266,57 @@ export const upgradeUser = createAsyncThunk(
   }
 );
 
+export const sendLoginCode = createAsyncThunk(
+  "auth/sendLoginCode",
+  async (email, thunkAPI) => {
+    try {
+      return await authService.sendLoginCode(email);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const loginWithCode = createAsyncThunk(
+  "auth/loginWithCode",
+  async ({ email, code }, thunkAPI) => {
+    try {
+      return await authService.loginWithCode({ email, code });
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const loginWithGoogle = createAsyncThunk(
+  "auth/loginWithGoogle",
+  async (userToken, thunkAPI) => {
+    try {
+      return await authService.loginWithGoogle(userToken);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -274,6 +327,34 @@ const authSlice = createSlice({
       state.isSuccess = false;
       state.isLoading = false;
       state.message = "";
+    },
+    CALC_VERIFIED_USERS(state, action) {
+      const array = [];
+      state.users.map((user) => {
+        const { isVerified } = user;
+        return array.push(isVerified);
+      });
+      let count = 0;
+      array.forEach((item) => {
+        if (item === true) {
+          count += 1;
+        }
+      });
+      state.verifiedUsers = count;
+    },
+    CALC_SUSPENDED_USERS(state, action) {
+      const array = [];
+      state.users.map((user) => {
+        const { role } = user;
+        return array.push(role);
+      });
+      let count = 0;
+      array.forEach((item) => {
+        if (item === "suspended") {
+          count += 1;
+        }
+      });
+      state.suspendedUsers = count;
     },
   },
   extraReducers: (builder) => {
@@ -317,6 +398,9 @@ const authSlice = createSlice({
         state.message = action.payload;
         state.user = null;
         toast.error(action.payload);
+        if (action.payload.includes("New browser")) {
+          state.twoFactor = true;
+        }
       })
       //logout user
       .addCase(logout.pending, (state, action) => {
@@ -505,11 +589,65 @@ const authSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
         toast.error(action.payload);
+      })
+      // send login code
+      .addCase(sendLoginCode.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(sendLoginCode.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(sendLoginCode.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        toast.error(action.payload);
+      })
+      // loginWithCode
+      .addCase(loginWithCode.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loginWithCode.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isLoggedIn = true;
+        state.twoFactor = false;
+        state.user = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(loginWithCode.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        state.user = null;
+        toast.error(action.payload);
+      })
+      // loginWithGoogle
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isLoggedIn = true;
+        state.user = action.payload;
+        toast.success('Login Successful');
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        state.user = null;
+        toast.error(action.payload);
       });
   },
 });
 
-export const { RESET } = authSlice.actions;
+export const { RESET, CALC_VERIFIED_USERS, CALC_SUSPENDED_USERS } =
+  authSlice.actions;
 export const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
 export const selectUser = (state) => state.auth.user;
 

@@ -18,6 +18,7 @@ const {
   changePassword,
   sendLoginCode,
   loginWithCode,
+  loginWithGoogle,
 } = require("../controllers/userController");
 
 const {
@@ -35,7 +36,7 @@ router.patch("/updateuser", protect, updateUser);
 router.delete("/:id", protect, adminOnly, deleteUser);
 router.get("/getUsers", protect, authorOnly, getUsers);
 router.get("/loginStatus", loginStatus);
-router.post("/upgradeUser", protect, adminOnly, upgradeUser);
+router.patch("/upgradeUser", protect, adminOnly, upgradeUser);
 router.post("/sendAutomatedEmail", protect, sendAutomatedEmail);
 
 router.post("/sendVerificationEmail", protect, sendVerificationEmail);
@@ -46,5 +47,7 @@ router.patch("/changePassword", protect, changePassword);
 
 router.post("/sendLoginCode/:email", sendLoginCode);
 router.post("/loginWithCode/:email", loginWithCode);
+
+router.post("/google/callback", loginWithGoogle);
 
 module.exports = router;
